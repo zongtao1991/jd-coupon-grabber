@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>京东优惠券抢购平台</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #222240;
+  --border: #2a2a4a;
+  --text: #e0e0e8;
+  --text2: #8888aa;
+  --accent: #e94560;
+  --accent2: #0f3460;
+  --green: #00d26a;
+  --orange: #ff9f43;
+  --red: #e94560;
+  --blue: #4a9eff;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+h1 span.icon { font-size: 28px; }
+
+/* Status Card */
+.status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.status-info { display: flex; align-items: center; gap: 12px; }
+.status-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--red);
+  animation: pulse 2s infinite;
+}
+.status-dot.online { background: var(--green); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.status-text { font-size: 15px; }
+.status-text .label { color: var(--text2); font-size: 13px; }
+.btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Section */
+.section { margin-bottom: 24px; }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.section-title { font-size: 16px; font-weight: 600; color: var(--text2); }
+
+/* Task List */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.task-info { flex: 1; min-width: 200px; }
+.task-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.task-url {
+  font-size: 12px;
+  color: var(--blue);
+  word-break: break-all;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-pending { background: rgba(255,159,67,.15); color: var(--orange); }
+.badge-running { background: rgba(74,158,255,.15); color: var(--blue); }
+.badge-completed { background: rgba(0,210,106,.15); color: var(--green); }
+.badge-failed { background: rgba(233,69,96,.15); color: var(--red); }
+.badge-expired { background: rgba(136,136,170,.15); color: var(--text2); }
+.empty-state { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
+
+/* Log Panel */
+.log-panel {
+  background: #0a0a14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  height: 260px;
+  overflow-y: auto;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.log-panel::-webkit-scrollbar { width: 6px; }
+.log-panel::-webkit-scrollbar-track { background: transparent; }
+.log-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.log-line { color: var(--green); white-space: pre-wrap; word-break: break-all; }
+.log-line.error { color: var(--red); }
+.log-line.warn { color: var(--orange); }
+
+/* Modal */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+}
+.modal-backdrop.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  width: 90%;
+  max-width: 480px;
+}
+.modal h2 { font-size: 18px; margin-bottom: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+.form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: var(--accent); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* Connection indicator */
+.ws-status {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+  display: inline-block;
+  margin-left: 8px;
+}
+.ws-status.connected { background: var(--green); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>
+    <span class="icon">🎫</span>
+    京东优惠券抢购平台
+    <span class="ws-status" id="wsStatus" title="WebSocket 连接状态"></span>
+  </h1>
+
+  <!-- Login Status -->
+  <div class="status-card">
+    <div class="status-info">
+      <div class="status-dot" id="loginDot"></div>
+      <div class="status-text">
+        <div id="loginLabel" style="font-weight:600;">未登录</div>
+        <div class="label" id="loginSub">请先扫码登录京东账号</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" id="btnLogin" onclick="doLogin()">扫码登录</button>
+      <button class="btn btn-danger btn-sm" id="btnLogout" onclick="doLogout()" style="display:none;">退出</button>
+    </div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">📋 抢券任务</span>
+      <button class="btn btn-primary btn-sm" onclick="showModal()">+ 添加任务</button>
+    </div>
+    <div class="task-list" id="taskList">
+      <div class="empty-state">暂无任务，点击上方按钮添加</div>
+    </div>
+  </div>
+
+  <!-- Logs -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">📟 实时日志 </span>
+      <button class="btn btn-secondary btn-sm" onclick="clearLogs()">清空</button>
+    </div>
+    <div class="log-panel" id="logPanel"></div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="hideModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>添加抢券任务</h2>
+    <div class="form-group">
+      <label>任务名称（可选）</label>
+      <input type="text" id="inputName" placeholder="如：政府消费券">
+    </div>
+    <div class="form-group">
+      <label>券链接 URL</label>
+      <input type="url" id="inputUrl" placeholder="https://u.jd.com/xxxxx" required>
+    </div>
+    <div class="form-group">
+      <label>定时执行时间</label>
+      <input type="datetime-local" id="inputTime" step="1">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="hideModal()">取消</button>
+      <button class="btn btn-primary" onclick="addTask()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let ws = null;
+let reconnectTimer = null;
+
+// --- WebSocket ---
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onopen = () => {
+    document.getElementById('wsStatus').classList.add('connected');
+    addLog('[SYSTEM] WebSocket 已连接', 'info');
+  };
+  ws.onclose = () => {
+    document.getElementById('wsStatus').classList.remove('connected');
+    addLog('[SYSTEM] WebSocket 断开，3秒后重连...', 'warn');
+    reconnectTimer = setTimeout(connectWS, 3000);
+  };
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'log') addLog(msg.data);
+      else if (msg.type === 'auth') handleAuthEvent(msg);
+      else if (msg.type === 'result') handleResultEvent(msg);
+      else if (msg.type === 'task_added' || msg.type === 'task_removed') loadTasks();
+    } catch { addLog(e.data); }
+  };
+}
+
+// --- Logs ---
+function addLog(text, level) {
+  const panel = document.getElementById('logPanel');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  if (level === 'error' || text.includes('[ERROR]') || text.includes('❌')) line.classList.add('error');
+  else if (level === 'warn' || text.includes('[WARN]')) line.classList.add('warn');
+  line.textContent = text;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+}
+function clearLogs() { document.getElementById('logPanel').innerHTML = ''; }
+
+// --- Auth ---
+async function checkStatus() {
+  try {
+    const res = await fetch(`${API}/api/status`);
+    const data = await res.json();
+    updateLoginUI(data.auth);
+  } catch (e) { addLog(`[ERROR] 状态检查失败: ${e}`, 'error'); }
+}
+
+function updateLoginUI(auth) {
+  const dot = document.getElementById('loginDot');
+  const label = document.getElementById('loginLabel');
+  const sub = document.getElementById('loginSub');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  if (auth.logged_in) {
+    dot.classList.add('online');
+    label.textContent = `已登录: ${auth.nickname || 'JD用户'}`;
+    sub.textContent = 'Cookie 有效';
+    btnLogin.style.display = 'none';
+    btnLogout.style.display = 'block';
+  } else {
+    dot.classList.remove('online');
+    label.textContent = '未登录';
+    sub.textContent = '请先扫码登录京东账号';
+    btnLogin.style.display = 'block';
+    btnLogout.style.display = 'none';
+  }
+}
+
+async function doLogin() {
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  addLog('[AUTH] 正在启动扫码登录，请在手机京东 App 扫码...');
+  try {
+    const res = await fetch(`${API}/api/login`, { method: 'POST' });
+    const data = await res.json();
+    addLog(`[AUTH] ${data.message}`);
+    await checkStatus();
+  } catch (e) { addLog(`[ERROR] 登录失败: ${e}`, 'error'); }
+  btn.disabled = false;
+  btn.textContent = '扫码登录';
+}
+
+async function doLogout() {
+  await fetch(`${API}/api/logout`, { method: 'POST' });
+  addLog('[AUTH] 已退出登录');
+  await checkStatus();
+}
+
+function handleAuthEvent(msg) {
+  addLog(`[AUTH] ${msg.message}`);
+  if (msg.status === 'logged_in') checkStatus();
+}
+
+// --- Tasks ---
+async function loadTasks() {
+  try {
+    const res = await fetch(`${API}/api/tasks`);
+    const tasks = await res.json();
+    renderTasks(tasks);
+  } catch (e) { addLog(`[ERROR] 加载任务失败: ${e}`, 'error'); }
+}
+
+function renderTasks(tasks) {
+  const list = document.getElementById('taskList');
+  if (!tasks.length) {
+    list.innerHTML = '<div class="empty-state">暂无任务，点击上方按钮添加</div>';
+    return;
+  }
+  list.innerHTML = tasks.map(t => {
+    const badgeClass = `badge-${t.status}`;
+    const statusText = { pending:'等待中', running:'执行中', completed:'已完成', failed:'失败', expired:'已过期' }[t.status] || t.status;
+    const time = t.scheduled_time ? new Date(t.scheduled_time).toLocaleString('zh-CN') : '-';
+    return `
+      <div class="task-item">
+        <div class="task-info">
+          <div class="task-name">${esc(t.name)} <span class="badge ${badgeClass}">${statusText}</span></div>
+          <div class="task-url" title="${esc(t.url)}">${esc(t.url)}</div>
+          <div class="task-meta">⏰ ${time}${t.result ? ' · ' + esc(t.result) : ''}</div>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-secondary btn-sm" onclick="runNow('${t.id}')" ${t.status==='running'?'disabled':''}>▶ 执行</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+async function addTask() {
+  const url = document.getElementById('inputUrl').value.trim();
+  const time = document.getElementById('inputTime').value;
+  const name = document.getElementById('inputName').value.trim();
+  if (!url) return alert('请输入券链接');
+  if (!time) return alert('请选择执行时间');
+  try {
+    const res = await fetch(`${API}/api/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, scheduled_time: time, name }),
+    });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    addLog(`[TASK] 任务已添加: ${data.name} -> ${time}`);
+    hideModal();
+    loadTasks();
+    // 清空表单
+    document.getElementById('inputUrl').value = '';
+    document.getElementById('inputTime').value = '';
+    document.getElementById('inputName').value = '';
+  } catch (e) { addLog(`[ERROR] 添加失败: ${e}`, 'error'); }
+}
+
+async function deleteTask(id) {
+  if (!confirm('确认删除此任务？')) return;
+  await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE' });
+  addLog(`[TASK] 任务已删除: ${id}`);
+  loadTasks();
+}
+
+async function runNow(id) {
+  addLog(`[TASK] 手动触发任务: ${id}`);
+  try {
+    const res = await fetch(`${API}/api/tasks/${id}/run`, { method: 'POST' });
+    const data = await res.json();
+    addLog(`[TASK] 执行结果: ${data.message || JSON.stringify(data)}`);
+    loadTasks();
+  } catch (e) { addLog(`[ERROR] 执行失败: ${e}`, 'error'); }
+}
+
+function handleResultEvent(msg) {
+  addLog(`[RESULT] 任务 ${msg.task_id}: ${msg.data?.message || 'done'}`);
+  loadTasks();
+}
+
+// --- Modal ---
+function showModal() {
+  document.getElementById('modalBackdrop').classList.add('show');
+  // 默认时间：今天 00:00:00
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const iso = new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+  document.getElementById('inputTime').value = iso;
+}
+function hideModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('modalBackdrop').classList.remove('show');
+}
+
+// --- Init ---
+window.addEventListener('DOMContentLoaded', () => {
+  connectWS();
+  checkStatus();
+  loadTasks();
+  // 每 30s 刷新状态
+  setInterval(checkStatus, 30000);
+  setInterval(loadTasks, 15000);
+});
+</script>
+</body>
+</html>

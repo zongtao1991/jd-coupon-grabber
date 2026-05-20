@@ -1,0 +1,17 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+grabber:
+  preheat_seconds: 3
+  retry_count: 3
+  retry_interval_ms: 200
+  screenshot: true
+
+browser:
+  headless: true
+  user_agent: ""
+
+ntp:
+  server: "ntp.aliyun.com"
+  sync_before_grab: true

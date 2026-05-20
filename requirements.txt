@@ -1,0 +1,7 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+playwright>=1.43
+apscheduler>=3.10
+ntplib>=0.4
+pyyaml>=6.0
+aiofiles>=23.2
